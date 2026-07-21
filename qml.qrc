@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/components/ImagePanel.qml</file>
+        <file>qml/components/ParameterPanel.qml</file>
+        <file>qml/components/MainMenu.qml</file>
+        <file>qml/dialogs/OpenImageDialog.qml</file>
+        <file>qml/dialogs/SaveImageDialog.qml</file>
+        <file>qml/dialogs/AboutDialog.qml</file>
+        <file>qml/dialogs/AlertDialog.qml</file>
+        <file>qml/dialogs/HistogramDialog.qml</file>
+        <file>qml/dialogs/ImageViewerDialog.qml</file>
+    </qresource>
+</RCC>

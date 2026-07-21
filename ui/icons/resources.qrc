@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>folder.png</file>
+    <file>diskette.png</file>
+    <file>close.png</file>
+    <file>restore.png</file>
+    <file>bar-chart.png</file>
+    <file>noise.png</file>
+    <file>rotate.png</file>
+    <file>flip-h.png</file>
+    <file>flip-v.png</file>
+    <file>resize.png</file>
+    <file>icon.png</file>
+  </qresource>
+</RCC>
