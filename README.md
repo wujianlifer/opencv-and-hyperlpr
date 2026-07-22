@@ -4,6 +4,8 @@
 
 > CMake 工程名为 `opencvAndHyperlpr`，运行时程序名为「图像处理实验平台」。
 
+> opencv(安装到C:\Program Files): https://github.com/opencv/opencv/releases/download/4.12.0/opencv-4.12.0-windows.exe
+
 > 依赖 MNN和hyperlpr ： https://gitee.com/wujianlifer/mnn、https://gitee.com/wujianlifer/hyper-lpr
 
 ## 1. 项目简介
