@@ -4,6 +4,8 @@
 
 > CMake 工程名为 `opencvAndHyperlpr`，运行时程序名为「图像处理实验平台」。
 
+> 依赖 MNN和hyperlpr ： https://gitee.com/wujianlifer/mnn、https://gitee.com/wujianlifer/hyper-lpr
+
 ## 1. 项目简介
 
 本项目是一个数字图像处理教学软件，旨在帮助学生学习和理解各种图像处理算法。软件采用 **QML 前端 + C++ 后端** 架构，提供直观的 GUI 界面，支持实时预览处理效果，并集成了传统车牌识别算法和基于 HyperLPR 的深度学习车牌识别。图像处理在后台线程执行，界面不会卡顿。
@@ -158,7 +160,9 @@ opencvAndHyperlpr/
 2. 安装 OpenCV 4.12.0（预编译包，vc16）
 3. 安装 Visual Studio 2022 Build Tools
 4. 安装 CMake 3.24+
-
+5、编译MNN：https://gitee.com/wujianlifer/mnn
+6、编译hyperlpr：https://gitee.com/wujianlifer/hyper-lpr
+7、把刚才编译过后的 hyperlpr3.dll、hyperlpr3.lib、MNN.dll、MNN.lib、opencv_world4120.dll、opencv_world4120.lib 移动到 `(thirtyparty)` 
 ### 8.2 配置和编译
 
 **方式一：Qt Creator（推荐）**
@@ -310,3 +314,4 @@ HyperLPR 项目使用 Apache 2.0 许可证，详见 `HyperLPR-master/LICENSE` �
 - **QtImageProcess**（前端界面与图像处理流程的参考实现）：<https://github.com/Ayuan2002/QtImageProcess>
 - **MNN**（轻量级深度学习推理引擎）：<https://github.com/alibaba/MNN>
 - **HyperLPR**（高性能开源中文车牌识别框架）：<https://github.com/szad670401/HyperLPR>
+
