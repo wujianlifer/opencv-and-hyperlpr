@@ -1,55 +1,36 @@
 #include <licence_recognition_util.hpp>
-#include <QCoreApplication>
 #include <QDebug>
-#include <QDir>
+#include <QFile>
 #include <QString>
+
+// 从编译进 exe 的 Qt 资源（templates.qrc，前缀 /templates）中读取字符模板图片。
+// 模板固化在二进制内，运行目录无 pictures/ 文件夹、用户也无法在外部篡改，
+// 保证传统车牌识别结果稳定、可信。
+static cv::Mat loadQrcImage(const QString& resourcePath)
+{
+    QFile file(resourcePath);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        return cv::Mat();
+    }
+    const QByteArray data = file.readAll();
+    std::vector<uchar> buf(data.begin(), data.end());
+    return cv::imdecode(buf, cv::IMREAD_GRAYSCALE);
+}
 
 std::string LicenceRecognitionUtil::getNumsPath()
 {
-    QString appDir = QCoreApplication::applicationDirPath();
-    QDir dir(appDir);
-    for (int i = 0; i < 3; ++i)
-    {
-        QString picturesPath = dir.filePath("pictures/nums/");
-        if (QFileInfo::exists(picturesPath))
-        {
-            return picturesPath.toStdString();
-        }
-        if (!dir.cdUp()) break;
-    }
-    return "./pictures/nums/";
+    return ":/templates/pictures/nums/";
 }
 
 std::string LicenceRecognitionUtil::getAlphabetPath()
 {
-    QString appDir = QCoreApplication::applicationDirPath();
-    QDir dir(appDir);
-    for (int i = 0; i < 3; ++i)
-    {
-        QString picturesPath = dir.filePath("pictures/alphabet/");
-        if (QFileInfo::exists(picturesPath))
-        {
-            return picturesPath.toStdString();
-        }
-        if (!dir.cdUp()) break;
-    }
-    return "./pictures/alphabet/";
+    return ":/templates/pictures/alphabet/";
 }
 
 std::string LicenceRecognitionUtil::getProvincePath()
 {
-    QString appDir = QCoreApplication::applicationDirPath();
-    QDir dir(appDir);
-    for (int i = 0; i < 3; ++i)
-    {
-        QString picturesPath = dir.filePath("pictures/province/");
-        if (QFileInfo::exists(picturesPath))
-        {
-            return picturesPath.toStdString();
-        }
-        if (!dir.cdUp()) break;
-    }
-    return "./pictures/province/";
+    return ":/templates/pictures/province/";
 }
 
 LicenceRecognition::~LicenceRecognition()
@@ -731,7 +712,7 @@ bool LicenceRecognition::loadTemplates()
     for (int i = 0; i < 10; ++i)
     {
         std::string filename = LicenceRecognitionUtil::getNumsPath() + "140_" + std::to_string(i) + ".jpg";
-        cv::Mat img = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+        cv::Mat img = loadQrcImage(QString::fromStdString(filename));
         if (!img.empty())
         {
             img = preprocessTemplate(img);
@@ -748,7 +729,7 @@ bool LicenceRecognition::loadTemplates()
     {
         if (c == 'I' || c == 'O') continue;
         std::string filename = LicenceRecognitionUtil::getAlphabetPath() + "140_" + std::string(1, c) + ".jpg";
-        cv::Mat img = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+        cv::Mat img = loadQrcImage(QString::fromStdString(filename));
         if (!img.empty())
         {
             img = preprocessTemplate(img);
@@ -768,8 +749,7 @@ bool LicenceRecognition::loadTemplates()
         std::string short_name = p.second;
         QString q_filename = QString::fromStdString(LicenceRecognitionUtil::getProvincePath()) 
                             + "140_" + QString::fromStdString(short_name) + ".jpg";
-        std::string filename = q_filename.toLocal8Bit().toStdString();
-        cv::Mat img = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+        cv::Mat img = loadQrcImage(q_filename);
         if (!img.empty())
         {
             img = preprocessTemplate(img);

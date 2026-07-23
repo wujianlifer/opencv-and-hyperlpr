@@ -64,12 +64,13 @@ opencvAndHyperlpr/
 │   ├── opencv_world4120.dll
 │   └── opencv_world4120d.dll
 ├── resource/                 # 资源文件（模型、字体，构建时自动复制）
-├── pictures/                 # 字符模板（传统车牌识别）/ 示例图片
+├── pictures/                 # 字符模板素材（传统车牌识别，编译期经 templates.qrc 编入 exe，运行期无需此目录）
 ├── HyperLPR-master/          # HyperLPR 源码与资源
 ├── legacy/                   # 已弃用的 Widgets 对话框（不再编译）
 ├── build/                    # 构建目录
 ├── CMakeLists.txt            # 构建配置
 ├── qml.qrc                    # QML 资源
+├── templates.qrc             # 传统车牌识别字符模板资源（QRC，编译进 exe）
 └── README.md                 # 项目说明
 ```
 
@@ -193,7 +194,7 @@ cmake --build . --config Debug
 
 ### 8.3 运行
 
-编译成功后，运行生成的 `opencvAndHyperlpr.exe`，或在 Qt Creator 中点击"Run"按钮。构建过程会通过 `windeployqt` 自动复制 Qt 运行依赖，并复制 `MNN.dll`、`hyperlpr3.dll`、`opencv_world4120*.dll` 及模型/字体资源到构建目录。
+编译成功后，运行生成的 `opencvAndHyperlpr.exe`，或在 Qt Creator 中点击"Run"按钮。构建过程会通过 `windeployqt` 自动复制 Qt 运行依赖，并复制 `MNN.dll`、`hyperlpr3.dll`、`opencv_world4120*.dll` 及模型/字体资源到构建目录（传统车牌识别使用的字符模板已通过 `templates.qrc` 编译进 exe，构建与运行均无需额外的 `pictures/` 目录）。
 
 ## 9. 车牌识别使用说明
 
@@ -260,6 +261,14 @@ HyperLPR 模型文件位于 `HyperLPR-master/resource/models/r2_mobile/`，字�
 - MNN：MNN.dll
 - HyperLPR：hyperlpr3.dll
 
+### 10.6 传统车牌识别模板已编译进 exe（templates.qrc）
+
+传统车牌识别（`LicenceRecognition`）使用的字符模板（数字 0-9、字母 A-Z 共 65 张 `140_*.jpg`）不再从外部 `pictures/` 目录读取，而是在构建期通过 `templates.qrc` 编译进 exe 二进制：
+
+- **编译期**：`templates.qrc` 以 `/templates` 为前缀编入 `pictures/nums|alphabet|province/140_*.jpg`，`CMakeLists.txt` 已将其加入可执行文件源列表（`CMAKE_AUTORCC` 自动处理）。因此编译时项目根下的 `pictures/` 仍需保留作为素材源。
+- **运行期**：模板随 exe 加载，运行目录不需要 `pictures/` 文件夹；`CMakeLists.txt` 也不再执行复制 `pictures/` 的步骤。
+- **防篡改**：模板固化在二进制内，用户无法在 exe 目录外修改/替换模板，避免外部模板被改导致识别结果异常。`pictures/` 中的 `220_*`、`green_*`、`*_*.png` 等素材未编入（传统算法仅使用 `140_*.jpg` 系列）。
+
 ## 11. 移植到其他电脑
 
 ### 11.1 需要复制的文件
@@ -272,7 +281,7 @@ opencvAndHyperlpr/
 ├── ui/
 ├── thirdparty/
 ├── resource/
-├── pictures/
+├── pictures/             # 编译期素材（templates.qrc 编入 exe，仅构建需要，运行分发无需）
 ├── HyperLPR-master/
 ├── CMakeLists.txt
 └── qml.qrc

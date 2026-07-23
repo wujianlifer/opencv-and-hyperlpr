@@ -1,0 +1,74 @@
+<RCC>
+    <qresource prefix="/templates">
+        <!-- 数字 0-9 -->
+        <file>pictures/nums/140_0.jpg</file>
+        <file>pictures/nums/140_1.jpg</file>
+        <file>pictures/nums/140_2.jpg</file>
+        <file>pictures/nums/140_3.jpg</file>
+        <file>pictures/nums/140_4.jpg</file>
+        <file>pictures/nums/140_5.jpg</file>
+        <file>pictures/nums/140_6.jpg</file>
+        <file>pictures/nums/140_7.jpg</file>
+        <file>pictures/nums/140_8.jpg</file>
+        <file>pictures/nums/140_9.jpg</file>
+
+        <!-- 字母 A-Z（跳过 I、O） -->
+        <file>pictures/alphabet/140_A.jpg</file>
+        <file>pictures/alphabet/140_B.jpg</file>
+        <file>pictures/alphabet/140_C.jpg</file>
+        <file>pictures/alphabet/140_D.jpg</file>
+        <file>pictures/alphabet/140_E.jpg</file>
+        <file>pictures/alphabet/140_F.jpg</file>
+        <file>pictures/alphabet/140_G.jpg</file>
+        <file>pictures/alphabet/140_H.jpg</file>
+        <file>pictures/alphabet/140_J.jpg</file>
+        <file>pictures/alphabet/140_K.jpg</file>
+        <file>pictures/alphabet/140_L.jpg</file>
+        <file>pictures/alphabet/140_M.jpg</file>
+        <file>pictures/alphabet/140_N.jpg</file>
+        <file>pictures/alphabet/140_P.jpg</file>
+        <file>pictures/alphabet/140_Q.jpg</file>
+        <file>pictures/alphabet/140_R.jpg</file>
+        <file>pictures/alphabet/140_S.jpg</file>
+        <file>pictures/alphabet/140_T.jpg</file>
+        <file>pictures/alphabet/140_U.jpg</file>
+        <file>pictures/alphabet/140_V.jpg</file>
+        <file>pictures/alphabet/140_W.jpg</file>
+        <file>pictures/alphabet/140_X.jpg</file>
+        <file>pictures/alphabet/140_Y.jpg</file>
+        <file>pictures/alphabet/140_Z.jpg</file>
+
+        <!-- 省份简称（31 个） -->
+        <file>pictures/province/140_皖.jpg</file>
+        <file>pictures/province/140_京.jpg</file>
+        <file>pictures/province/140_渝.jpg</file>
+        <file>pictures/province/140_闽.jpg</file>
+        <file>pictures/province/140_甘.jpg</file>
+        <file>pictures/province/140_粤.jpg</file>
+        <file>pictures/province/140_桂.jpg</file>
+        <file>pictures/province/140_贵.jpg</file>
+        <file>pictures/province/140_琼.jpg</file>
+        <file>pictures/province/140_冀.jpg</file>
+        <file>pictures/province/140_黑.jpg</file>
+        <file>pictures/province/140_豫.jpg</file>
+        <file>pictures/province/140_鄂.jpg</file>
+        <file>pictures/province/140_湘.jpg</file>
+        <file>pictures/province/140_苏.jpg</file>
+        <file>pictures/province/140_赣.jpg</file>
+        <file>pictures/province/140_吉.jpg</file>
+        <file>pictures/province/140_辽.jpg</file>
+        <file>pictures/province/140_蒙.jpg</file>
+        <file>pictures/province/140_宁.jpg</file>
+        <file>pictures/province/140_青.jpg</file>
+        <file>pictures/province/140_鲁.jpg</file>
+        <file>pictures/province/140_沪.jpg</file>
+        <file>pictures/province/140_晋.jpg</file>
+        <file>pictures/province/140_陕.jpg</file>
+        <file>pictures/province/140_川.jpg</file>
+        <file>pictures/province/140_津.jpg</file>
+        <file>pictures/province/140_新.jpg</file>
+        <file>pictures/province/140_藏.jpg</file>
+        <file>pictures/province/140_云.jpg</file>
+        <file>pictures/province/140_浙.jpg</file>
+    </qresource>
+</RCC>

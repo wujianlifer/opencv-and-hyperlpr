@@ -63,6 +63,7 @@ add_executable(opencvAndHyperlpr
         sources/recognition/licence_recognition_util.cpp
         qml.qrc
         ui/icons/resources.qrc
+        templates.qrc
 )
 
 target_link_libraries(opencvAndHyperlpr
@@ -96,6 +97,8 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         "${OpenCV_DIR}/../bin/opencv_world4120$<$<CONFIG:Debug>:d>.dll"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
+
+
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory
