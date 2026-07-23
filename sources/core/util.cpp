@@ -56,20 +56,6 @@ QPixmap ImageUtil::convertToQPixmap(const cv::Mat &mat) {
     return QPixmap::fromImage(image.copy());
 }
 
-QPixmap ImageUtil::convertToQPixmap(const cv::Mat &image, int) {
-    QPixmap pixmap;
-    try {
-        cv::Mat mat = image.clone();
-        QDateTime currentDateTime = QDateTime::currentDateTime();
-        std::string file_name = cache_file_path + currentDateTime.toString("yyyyMMddHHmm").toStdString() + ".png";
-        cv::imwrite(file_name, mat);
-        pixmap = QPixmap(QString::fromStdString(file_name));
-    }catch (const cv::Exception& e){
-        std::cerr << "Error in Util class: " << e.what() << std::endl;
-    }
-    return pixmap;
-}
-
 cv::Mat ImageUtil::matFromQImage(const QImage &img) {
     if (img.isNull())
         return {};

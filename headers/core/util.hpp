@@ -12,7 +12,6 @@ static QPixmap calculateGrayscaleHistogram(const QImage &image);
 class ImageUtil {
 public:
     static QPixmap convertToQPixmap(const cv::Mat &image);
-    static QPixmap convertToQPixmap(const cv::Mat &image, int);
     // 把 QImage 转换为 OpenCV 可直接使用的 cv::Mat（RGB32/ARGB32/RGB888）
     static cv::Mat matFromQImage(const QImage &img);
     // 噪声（基于 cv::Mat，供后台线程复用内存中的图像）

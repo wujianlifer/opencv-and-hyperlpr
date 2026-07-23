@@ -139,6 +139,8 @@ cv::Mat DimensionManipulator::laplacian_filter(int radius) {
         // 应用拉普拉斯算子进行滤波
         cv::Mat result;
         cv::Laplacian(this->gray_image, result, CV_32F,  2*radius+1);
+        // 拉普拉斯结果为有符号浮点，需取绝对值并转为 8U 才能正常显示
+        cv::convertScaleAbs(result, result);
         return result;
     } catch (const cv::Exception& e) {
         std::cerr << "OpenCV error occurred in manipulator: " << e.what() << std::endl;

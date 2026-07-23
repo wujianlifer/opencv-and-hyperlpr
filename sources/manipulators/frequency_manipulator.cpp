@@ -75,8 +75,9 @@ cv::Mat FrequencyManipulator::fourier_transform() {
         q1.copyTo(tmp);
         q2.copyTo(q1);
         tmp.copyTo(q2);
-        // 归一化
+        // 归一化到 0-255 后转为 8U，便于后续 QImage 正常显示
         cv::normalize(magnitudeImage, magnitudeImage, 0, 255, cv::NORM_MINMAX);
+        magnitudeImage.convertTo(magnitudeImage, CV_8U);
         return magnitudeImage;
     } catch (const cv::Exception& e) {
         std::cerr << "OpenCV error occurred in manipulator: " << e.what() << std::endl;

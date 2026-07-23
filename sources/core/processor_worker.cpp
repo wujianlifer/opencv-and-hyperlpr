@@ -238,8 +238,5 @@ QImage ProcessorWorker::runManipulator(const ImageProcessor::ProcessRequest& req
     default:
         return {};
     }
-    if (req.type == ImageProcessor::FREQUENCY_FOURIER
-        || req.type == ImageProcessor::DIMENSION_LAPLACIAN_FILTER)
-        return ImageUtil::convertToQPixmap(mat, 5).toImage();
     return ImageUtil::convertToQPixmap(mat).toImage();
 }
