@@ -6,8 +6,19 @@
 #define QTIMAGEPROCESS_GLOBE_DEFINE_WORDS_H
 
 #include <QString>
+#include <QStandardPaths>
+#include <QDir>
 
-#define cache_file_path "./cache/"
+// 缓存目录：使用系统规范的 CacheLocation（不污染 exe 目录、不依赖工作目录）
+inline std::string cacheDir() {
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    if (dir.isEmpty())
+        dir = QDir::homePath();
+    dir += "/opencvAndHyperlpr/cache";
+    QDir().mkpath(dir);
+    return (dir + "/").toStdString();
+}
+#define cache_file_path cacheDir()
 enum ProcessType{
     EMPTY=0,
     BASED_ROTATE,

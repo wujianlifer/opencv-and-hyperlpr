@@ -61,7 +61,7 @@ opencvAndHyperlpr/
 ├── thirdparty/               # 预编译依赖库
 │   ├── MNN.dll / MNN.lib
 │   ├── hyperlpr3.dll / hyperlpr3.lib
-│   └── opencv_world4120.dll     # Release 版（已入库）；Debug 版 opencv_world4120d.dll 已从仓库移除，见 10.7
+│   └── （opencv_world4120*.dll 不再入库，由 CMake 在构建时从 OpenCV 安装目录自动复制，见 10.7）
 ├── resource/                 # 资源文件（模型、字体，构建时自动复制）
 ├── pictures/                 # 字符模板素材（传统车牌识别，编译期经 templates.qrc 编入 exe，运行期无需此目录）
 ├── HyperLPR-master/          # HyperLPR 源码与资源
@@ -164,7 +164,7 @@ opencvAndHyperlpr/
 4. 安装 CMake 3.24+
 5、编译MNN：https://gitee.com/wujianlifer/mnn
 6、编译hyperlpr：https://gitee.com/wujianlifer/hyper-lpr
-7、把刚才编译过后的 hyperlpr3.dll、hyperlpr3.lib、MNN.dll、MNN.lib、opencv_world4120.dll、opencv_world4120.lib 移动到 `(thirtyparty)` 
+7、把刚才编译过后的 hyperlpr3.dll、hyperlpr3.lib、MNN.dll、MNN.lib 移动到 thirdparty/（注意：opencv_world4120*.dll 由 CMake 在构建时从 OpenCV 安装目录自动复制，无需放入 thirdparty/）
 ### 8.2 配置和编译
 
 **方式一：Qt Creator（推荐）**
@@ -256,7 +256,7 @@ HyperLPR 模型文件位于 `HyperLPR-master/resource/models/r2_mobile/`，字�
 
 运行程序需要以下 DLL 文件（编译时会自动复制）：
 - Qt 相关：Qt6Core.dll, Qt6Gui.dll, Qt6Qml.dll, Qt6Quick.dll, Qt6QuickControls2.dll 等（由 windeployqt 处理）
-- OpenCV：opencv_world4120.dll (Release，已入库) / opencv_world4120d.dll (Debug，构建时由 CMake 从 OpenCV 安装目录自动复制，未入库，详见 10.7)
+- OpenCV：opencv_world4120.dll / opencv_world4120d.dll（Release 与 Debug 均由 CMake 构建时从 OpenCV 安装目录 `OpenCV_DIR/../bin/` 自动复制，不再入库，详见 10.7）
 - MNN：MNN.dll
 - HyperLPR：hyperlpr3.dll
 
@@ -268,22 +268,23 @@ HyperLPR 模型文件位于 `HyperLPR-master/resource/models/r2_mobile/`，字�
 - **运行期**：模板随 exe 加载，运行目录不需要 `pictures/` 文件夹；`CMakeLists.txt` 也不再执行复制 `pictures/` 的步骤。
 - **防篡改**：模板固化在二进制内，用户无法在 exe 目录外修改/替换模板，避免外部模板被改导致识别结果异常。`pictures/` 中的 `220_*`、`green_*`、`*_*.png` 等素材未编入（传统算法仅使用 `140_*.jpg` 系列）。
 
-### 10.7 opencv_world4120d.dll（Debug 版）已从仓库移除
+### 10.7 opencv_world4120*.dll（Release/Debug）均不再入库
 
-`thirdparty/opencv_world4120d.dll`（约 121MB）因超过 GitHub 单文件 100MB 的上传限制（GH001 错误），已从 Git 历史中移除，**未纳入仓库**：
+`opencv_world4120*.dll`（Release 约 61MB、Debug 约 121MB）不再纳入 Git 仓库：
 
-- **Release 构建**：使用 `thirdparty/opencv_world4120.dll`（已入库，约 61MB，未超限）。
-- **Debug 构建**：无需手动把 `opencv_world4120d.dll` 放进 `thirdparty/`。`CMakeLists.txt` 的 POST_BUILD 步骤会在构建时从 OpenCV 安装目录自动复制到构建目录：
+- **为何移除**：
+  - Debug 版（约 121MB）超过 GitHub 单文件 100MB 上传限制（GH001），已从历史中移除；
+  - Release 版（约 61MB）虽未超限，但 `CMakeLists.txt` 的 POST_BUILD 步骤在构建时已**自动从 OpenCV 安装目录复制**，提交进仓库属于冗余，故一并移除以减小仓库体积。
+- **构建时如何获取**：`CMakeLists.txt` 的 POST_BUILD 会从 `OpenCV_DIR/../bin/` 按构建类型自动复制对应 dll 到构建目录：
 
   ```cmake
   # CMakeLists.txt（POST_BUILD）
   "${OpenCV_DIR}/../bin/opencv_world4120$<$<CONFIG:Debug>:d>.dll"
-  # Debug → C:/Program Files/opencv/build/x64/vc16/bin/opencv_world4120d.dll
+  # Release → C:/Program Files/opencv/build/x64/vc16/bin/opencv_world4120.dll
+  # Debug   → C:/Program Files/opencv/build/x64/vc16/bin/opencv_world4120d.dll
   ```
 
-  只要本机已安装 OpenCV 4.12.0（vc16），Debug 版本即可正常构建与运行。
-
-> 说明：该文件仅从仓库移除，对本地及克隆后的 Debug 构建均无影响（依赖本机 OpenCV 安装目录中的 debug dll，CMake 自动复制）。gitee / github 上保留的提交历史中也不再包含此大文件。
+  只要本机已安装 OpenCV 4.12.0（vc16），Release/Debug 版本均可正常构建与运行，`thirdparty/` 中无需手动放置该 dll。gitee / github 历史中也不再包含此大文件。
 
 ## 11. 移植到其他电脑
 

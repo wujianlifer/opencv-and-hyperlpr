@@ -79,9 +79,15 @@ target_link_libraries(opencvAndHyperlpr
 )
 
 if (MSVC)
-    link_directories("C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64")
-    link_directories("C:/Program Files (x86)/Windows Kits/10/Lib/10.0.15063.0/um/x64")
-endif()
+    # 避免硬编码 Windows SDK 版本路径：换机器/CI 上对应版本不存在会配置失败
+    foreach (_kit_lib
+            "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64"
+            "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.15063.0/um/x64")
+        if (EXISTS "${_kit_lib}")
+            link_directories("${_kit_lib}")
+        endif ()
+    endforeach ()
+endif ()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
