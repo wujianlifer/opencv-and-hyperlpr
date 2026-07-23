@@ -26,6 +26,9 @@ QPixmap HistogramUtil::calculateGrayscaleHistogram(const QImage &image) {
     QPainter painter(&histogramImage);
     painter.setPen(Qt::white);
     int maxCount = *std::max_element(histogram.begin(), histogram.end()); // 获取像素数量最大值
+    // 避免图像所有像素灰度都落在 [30,225] 之外时 maxCount 为 0 导致除零
+    if (maxCount <= 0)
+        return QPixmap::fromImage(histogramImage).scaled(400, 400, Qt::KeepAspectRatio);
     for (int i = 0; i < 256; i++) {
         int count = histogram[i];
         int x = i;
