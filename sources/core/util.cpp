@@ -61,7 +61,7 @@ QPixmap ImageUtil::convertToQPixmap(const cv::Mat &image, int) {
     try {
         cv::Mat mat = image.clone();
         QDateTime currentDateTime = QDateTime::currentDateTime();
-        std::string file_name = cache_file_path + currentDateTime.toString("yyyyMMddhhmm").toStdString() + ".png";
+        std::string file_name = cache_file_path + currentDateTime.toString("yyyyMMddHHmm").toStdString() + ".png";
         cv::imwrite(file_name, mat);
         pixmap = QPixmap(QString::fromStdString(file_name));
     }catch (const cv::Exception& e){

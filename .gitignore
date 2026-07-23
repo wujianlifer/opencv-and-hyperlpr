@@ -1,0 +1,13 @@
+# ---- 构建产物 / IDE ----
+build/
+.qtcreator/
+*.pro.user
+*.user
+.qmake.stash
+
+# ---- 运行时缓存（程序运行期生成，位于系统缓存目录；此处防止误落在仓库根） ----
+cache/
+
+# ---- Visual Studio / 其他 IDE ----
+.vs/
+*.suo
