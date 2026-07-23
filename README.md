@@ -195,6 +195,29 @@ cmake --build . --config Debug
 
 编译成功后，运行生成的 `opencvAndHyperlpr.exe`，或在 Qt Creator 中点击"Run"按钮。构建过程会通过 `windeployqt` 自动复制 Qt 运行依赖，并复制 `MNN.dll`、`hyperlpr3.dll`、`opencv_world4120*.dll` 及模型/字体资源到构建目录（传统车牌识别使用的字符模板已通过 `templates.qrc` 编译进 exe，构建与运行均无需额外的 `pictures/` 目录）。
 
+### 8.4 打包发布（生成可分发 zip）
+
+构建完成后，可用 `scripts/` 下的脚本一键打包 Release 产物为可分发压缩包：
+
+```
+scripts/
+├── windows/
+│   ├── zip.bat      # 打包脚本
+│   ├── clean.bat     # 清理 build 目录
+│   └── 7za.exe      # 7-Zip 命令行压缩工具（已随仓库提供，无需额外安装）
+└── dist/             # 压缩包输出目录（*.zip 已被 .gitignore 忽略，不入库）
+```
+
+**打包步骤**：
+1. 在 Qt Creator 中构建 **Release** 版本（构建时会通过 `windeployqt` 与 CMake POST_BUILD 自动复制全部运行依赖到 `build/msvc2022_6_10_3/Release`）。
+2. 双击运行 `scripts/windows/zip.bat`。
+3. 脚本会检查构建产物是否存在；存在则用 `7za.exe` 把 `build/msvc2022_6_10_3/Release` 压缩为 `scripts/dist/opencvAndHyperlpr_<yyyyMMdd_HHmm>.zip`，文件名含时间戳以便区分多次打包。
+4. 将 `dist/` 下生成的 zip 上传到 Release 即可分发。
+
+> 说明：`zip.bat` / `clean.bat` 中写死的 `msvc2022_6_10_3` 为本机 Qt Creator 套件对应的构建子目录名；若更换套件名，需同步修改脚本里的 `targetPath` / `buildPath`。
+
+**清理构建目录**：双击 `scripts/windows/clean.bat` 可删除 `build/msvc2022_6_10_3` 目录，用于重新构建。
+
 ## 9. 车牌识别使用说明
 
 > ⚠️ **传统算法识别率太低，不推荐使用，默认使用 HyperLPR 识别**
