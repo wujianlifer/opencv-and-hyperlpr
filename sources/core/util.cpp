@@ -9,6 +9,7 @@
 #include <iostream>
 #include <opencv2/flann/random.h>
 #include <random>
+#include <QDebug>
 
 QPixmap HistogramUtil::calculateGrayscaleHistogram(const QImage &image) {
     QVector<int> histogram(256, 0); // 存储每个灰度级别的像素数量
@@ -153,7 +154,7 @@ QPixmap ImageUtil::addSaltNoise(const QString &input) {
         }
         return convertToQPixmap(image);
     }catch (const cv::Exception& e){
-        std::cerr << "Error in Util class_add salt noise: " << e.what() << std::endl;
+        qWarning() << "Error in Util class_add salt noise:" << e.what();
     }
     return {};
 }
@@ -239,7 +240,7 @@ QPixmap ImageUtil::addGaussianNoise(const QString &input) {
         cv::add(image, noise, image);
         return convertToQPixmap(image);
     }catch (const cv::Exception& e){
-        std::cerr << "Error in Util class_add gaussian noise: " << e.what() << std::endl;
+        qWarning() << "Error in Util class_add gaussian noise:" << e.what();
     }
     return {};
 }
@@ -261,7 +262,7 @@ QPixmap ImageUtil::addSpeckleNoise(const QString &input) {
         // 转换为 QPixmap 并返回
         return convertToQPixmap(noisyImage);
     }catch (const cv::Exception& e){
-        std::cerr << "Error in Util class_add speckle noise: ";
+        qWarning() << "Error in Util class_add speckle noise:" << e.what();
     }
     return {};
 }
@@ -302,7 +303,7 @@ QPixmap ImageUtil::addSimulationNoise(const QString &input) {
         }
         return convertToQPixmap(image);
     }catch (const cv::Exception& e){
-        std::cerr << "Error in Util class_add simulation noise: ";
+        qWarning() << "Error in Util class_add simulation noise:" << e.what();
     }
     return {};
 }
@@ -315,7 +316,7 @@ QPixmap ImageUtil::getPixmapFromFile(const QString &filePath) {
         }
         return convertToQPixmap(image);
     }catch (const cv::Exception& e){
-        std::cerr << "Error in Util class_get pixmap from file: "<<e.what();
+        qWarning() << "Error in Util class_get pixmap from file:" << e.what();
     }
     return {};
 }
