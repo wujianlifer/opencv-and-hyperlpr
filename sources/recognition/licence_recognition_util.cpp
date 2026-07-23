@@ -17,6 +17,31 @@ static cv::Mat loadQrcImage(const QString& resourcePath)
     return cv::imdecode(buf, cv::IMREAD_GRAYSCALE);
 }
 
+// 字符/模板统一的二值化预处理：缩放 -> OTSU 阈值 -> 必要时反色 -> 开运算去噪
+static const int TEMPLATE_WIDTH = 20;
+static const int TEMPLATE_HEIGHT = 32;
+
+static cv::Mat preprocessTemplateImage(cv::Mat& img, const cv::Size& element_size)
+{
+    cv::Mat resized;
+    cv::resize(img, resized, cv::Size(TEMPLATE_WIDTH, TEMPLATE_HEIGHT), 0, 0, cv::INTER_CUBIC);
+
+    cv::Mat binary;
+    cv::threshold(resized, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+
+    int white_pixels = cv::countNonZero(binary);
+    if (white_pixels > binary.total() * 0.5)
+    {
+        cv::bitwise_not(binary, binary);
+    }
+
+    cv::Mat cleaned;
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, element_size);
+    cv::morphologyEx(binary, cleaned, cv::MORPH_OPEN, element);
+
+    return cleaned;
+}
+
 std::string LicenceRecognitionUtil::getNumsPath()
 {
     return ":/templates/pictures/nums/";
@@ -618,14 +643,11 @@ void LicenceRecognition::extractCharacterRegion()
         character_images.push_back(ci.image);
     }
 
-    const int TEMPLATE_WIDTH = 20;
-    const int TEMPLATE_HEIGHT = 32;
-
     for (size_t i = 0; i < character_images.size(); ++i)
-    {
-        auto& img = character_images[i];
+        {
+            auto& img = character_images[i];
 
-        cv::Mat horizontal_proj = cv::Mat::zeros(img.rows, 1, CV_32S);
+            cv::Mat horizontal_proj = cv::Mat::zeros(img.rows, 1, CV_32S);
         for (int y = 0; y < img.rows; y++)
         {
             horizontal_proj.at<int>(y, 0) = cv::countNonZero(img.row(y));
@@ -655,23 +677,7 @@ void LicenceRecognition::extractCharacterRegion()
             img = img(cv::Rect(left, 0, right - left + 1, img.rows));
         }
 
-        cv::Mat resized;
-        cv::resize(img, resized, cv::Size(TEMPLATE_WIDTH, TEMPLATE_HEIGHT), 0, 0, cv::INTER_CUBIC);
-
-        cv::Mat binary;
-        cv::threshold(resized, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-
-        int white_pixels = cv::countNonZero(binary);
-        if (white_pixels > binary.total() * 0.5)
-        {
-            cv::bitwise_not(binary, binary);
-        }
-
-        cv::Mat cleaned;
-        cv::Mat small_element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
-        cv::morphologyEx(binary, cleaned, cv::MORPH_OPEN, small_element);
-
-        img = cleaned;
+        img = preprocessTemplateImage(img, cv::Size(2, 2));
         character_info_list[i].image = img;
     }
 }
@@ -680,28 +686,9 @@ bool LicenceRecognition::loadTemplates()
 {
     bool success = true;
 
-    const int TEMPLATE_WIDTH = 20;
-    const int TEMPLATE_HEIGHT = 32;
-
     auto preprocessTemplate = [&](cv::Mat & img)
     {
-        cv::Mat resized;
-        cv::resize(img, resized, cv::Size(TEMPLATE_WIDTH, TEMPLATE_HEIGHT), 0, 0, cv::INTER_CUBIC);
-
-        cv::Mat binary;
-        cv::threshold(resized, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-
-        int white_pixels = cv::countNonZero(binary);
-        if (white_pixels > binary.total() * 0.5)
-        {
-            cv::bitwise_not(binary, binary);
-        }
-
-        cv::Mat cleaned;
-        cv::Mat small_element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 1));
-        cv::morphologyEx(binary, cleaned, cv::MORPH_OPEN, small_element);
-
-        return cleaned;
+        return preprocessTemplateImage(img, cv::Size(1, 1));
     };
 
     for (int i = 0; i < 10; ++i)
@@ -829,129 +816,54 @@ double LicenceRecognition::calculateShapeSimilarity(const cv::Mat& img1, const c
     return 1.0 / (1.0 + dist);
 }
 
-void LicenceRecognition::recognizeProvince(std::string& input)
+std::string LicenceRecognition::matchBestTemplate(const cv::Mat& char_img,
+                                                 const std::map<std::string, cv::Mat>& templates)
 {
-    cv::Mat first_char_image = character_images[0];
-
-    
-    
-
     double max_score = -1;
-    std::string matched_province;
-
-    for (const auto& province_img : province_images)
+    std::string matched;
+    for (const auto& tmpl : templates)
     {
         cv::Mat result;
-
-        cv::matchTemplate(first_char_image, province_img.second, result, cv::TM_CCOEFF_NORMED);
+        cv::matchTemplate(char_img, tmpl.second, result, cv::TM_CCOEFF_NORMED);
         double minVal1, maxVal1;
         cv::minMaxLoc(result, &minVal1, &maxVal1);
 
-        cv::matchTemplate(first_char_image, province_img.second, result, cv::TM_SQDIFF_NORMED);
+        cv::matchTemplate(char_img, tmpl.second, result, cv::TM_SQDIFF_NORMED);
         double minVal2;
         cv::minMaxLoc(result, &minVal2, nullptr);
         double diff_score = 1.0 - minVal2;
 
-        cv::matchTemplate(first_char_image, province_img.second, result, cv::TM_CCORR_NORMED);
+        cv::matchTemplate(char_img, tmpl.second, result, cv::TM_CCORR_NORMED);
         double maxVal3;
         cv::minMaxLoc(result, nullptr, &maxVal3);
 
-        double shape_score = calculateShapeSimilarity(first_char_image, province_img.second);
+        double shape_score = calculateShapeSimilarity(char_img, tmpl.second);
 
-        double combined_score = maxVal1 * 0.35 + diff_score * 0.25 + maxVal3 * 0.2 + shape_score * 0.2;
-
-        
-
-        if (combined_score > max_score)
+        double combined = maxVal1 * 0.35 + diff_score * 0.25 + maxVal3 * 0.2 + shape_score * 0.2;
+        if (combined > max_score)
         {
-            max_score = combined_score;
-            matched_province = province_img.first;
+            max_score = combined;
+            matched = tmpl.first;
         }
     }
+    return matched;
+}
 
-    
-    
-
-    input = matched_province;
+void LicenceRecognition::recognizeProvince(std::string& input)
+{
+    input = matchBestTemplate(character_images[0], province_images);
     province_images.clear();
 }
 
 void LicenceRecognition::recognizeAlphabet(std::string& input)
 {
-    cv::Mat second_char_image = character_images[1];
-
-    
-
-    double max_score = -1;
-    std::string matched_alphabet;
-    for (const auto& alphabet_img : alphabet_images)
-    {
-        cv::Mat result;
-
-        cv::matchTemplate(second_char_image, alphabet_img.second, result, cv::TM_CCOEFF_NORMED);
-        double minVal1, maxVal1;
-        cv::minMaxLoc(result, &minVal1, &maxVal1);
-
-        cv::matchTemplate(second_char_image, alphabet_img.second, result, cv::TM_SQDIFF_NORMED);
-        double minVal2;
-        cv::minMaxLoc(result, &minVal2, nullptr);
-        double diff_score = 1.0 - minVal2;
-
-        cv::matchTemplate(second_char_image, alphabet_img.second, result, cv::TM_CCORR_NORMED);
-        double maxVal3;
-        cv::minMaxLoc(result, nullptr, &maxVal3);
-
-        double shape_score = calculateShapeSimilarity(second_char_image, alphabet_img.second);
-
-        double combined_score = maxVal1 * 0.35 + diff_score * 0.25 + maxVal3 * 0.2 + shape_score * 0.2;
-
-        if (combined_score > max_score)
-        {
-            max_score = combined_score;
-            matched_alphabet = alphabet_img.first;
-        }
-    }
-
-    
-
-    input = matched_alphabet;
+    input = matchBestTemplate(character_images[1], alphabet_images);
     alphabet_images.clear();
 }
 
 void LicenceRecognition::recognizeCharacters(cv::Mat& input, std::string& output)
 {
-    double max_score = -1;
-    std::string matched_char;
-
-    for (const auto& template_img : template_images)
-    {
-        cv::Mat result;
-
-        cv::matchTemplate(input, template_img.second, result, cv::TM_CCOEFF_NORMED);
-        double minVal1, maxVal1;
-        cv::minMaxLoc(result, &minVal1, &maxVal1);
-
-        cv::matchTemplate(input, template_img.second, result, cv::TM_SQDIFF_NORMED);
-        double minVal2, maxVal2;
-        cv::minMaxLoc(result, &minVal2, &maxVal2);
-        double diff_score = 1.0 - minVal2;
-
-        cv::matchTemplate(input, template_img.second, result, cv::TM_CCORR_NORMED);
-        double minVal3, maxVal3;
-        cv::minMaxLoc(result, &minVal3, &maxVal3);
-
-        double shape_score = calculateShapeSimilarity(input, template_img.second);
-
-        double combined_score = maxVal1 * 0.35 + diff_score * 0.25 + maxVal3 * 0.2 + shape_score * 0.2;
-
-        if (combined_score > max_score)
-        {
-            max_score = combined_score;
-            matched_char = template_img.first;
-        }
-    }
-    
-    output = matched_char;
+    output = matchBestTemplate(input, template_images);
 }
 
 void LicenceRecognition::recognizeCharactersByFeature(cv::Mat& input, std::string& output)

@@ -63,6 +63,8 @@ private:
     std::map<std::string, cv::Mat> province_images;//所有省份模板图像
     cv::Mat detectColorPlate(); // 颜色检测提取车牌区域
     double calculateShapeSimilarity(const cv::Mat& img1, const cv::Mat& img2); // 计算形状相似度
+    // 在给定模板集合中用多指标加权匹配最优字符（供 recognize* 复用，避免重复代码）
+    std::string matchBestTemplate(const cv::Mat& char_img, const std::map<std::string, cv::Mat>& templates);
 public:
     LicenceRecognition();
     explicit LicenceRecognition(std::string& path);
