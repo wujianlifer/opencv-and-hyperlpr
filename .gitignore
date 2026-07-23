@@ -11,3 +11,6 @@ cache/
 # ---- Visual Studio / 其他 IDE ----
 .vs/
 *.suo
+
+# ---- 打包产物（保留 dist 目录，忽略其中的 zip） ----
+scripts/dist/*.zip
