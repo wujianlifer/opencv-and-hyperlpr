@@ -356,7 +356,7 @@ opencvAndHyperlpr/
 
 ## 13. 许可证
 
-本项目使用 MIT 许可证，详见 `LICENSE` 文件。
+本项目使用 GPL-3.0 许可证，详见 `LICENSE` 文件。
 
 HyperLPR 项目使用 Apache 2.0 许可证，详见 `HyperLPR-master/LICENSE` 文件。
 
