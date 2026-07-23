@@ -29,7 +29,7 @@ find_package(Qt6 COMPONENTS
 # 主窗口（QML）转换批次：后端 + QML 界面。
 # 图像操作按模块归类到 sources/manipulators、车牌识别归类到 sources/recognition；
 # 遗留的 Widgets 对话框（histogram/noise/licence_recognition/mainWindow）已移入 legacy/，不再编译。
-add_executable(opencvAndHyperlpr
+add_executable(opencvAndHyperlpr WIN32
         # ---- 核心：入口与后端 ----
         sources/core/main.cpp
         headers/core/globe_define_words.h
