@@ -3,7 +3,6 @@ project(opencvAndHyperlpr)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} headers headers/core headers/manipulators headers/recognition)
 if(NOT DEFINED CMAKE_PREFIX_PATH)
     set(CMAKE_PREFIX_PATH "E:/Qt/6.10.3/msvc2022_64")
 endif()
@@ -11,12 +10,8 @@ if(NOT DEFINED OpenCV_DIR)
     set(OpenCV_DIR "C:/Program Files/opencv/build/x64/vc16/lib")
 endif()
 find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
 
 set(THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
-link_directories(${THIRDPARTY_DIR})
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/HyperLPR-master/cpp/c_api)
 
 find_package(Qt6 COMPONENTS
         Core
@@ -66,16 +61,14 @@ add_executable(opencvAndHyperlpr WIN32
         templates.qrc
 )
 
-target_link_libraries(opencvAndHyperlpr
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
-        Qt::QuickControls2
-        ${OpenCV_LIBS}
-        hyperlpr3
-        MNN
-        winmm
+target_include_directories(opencvAndHyperlpr PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/headers/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/headers/manipulators
+    ${CMAKE_CURRENT_SOURCE_DIR}/headers/recognition
+    ${OpenCV_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyperLPR-master/cpp/c_api
 )
 
 if (MSVC)
@@ -84,10 +77,22 @@ if (MSVC)
             "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64"
             "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.15063.0/um/x64")
         if (EXISTS "${_kit_lib}")
-            link_directories("${_kit_lib}")
+            target_link_directories(opencvAndHyperlpr PRIVATE "${_kit_lib}")
         endif ()
     endforeach ()
 endif ()
+
+target_link_libraries(opencvAndHyperlpr
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+        Qt::QuickControls2
+        ${OpenCV_LIBS}
+        ${THIRDPARTY_DIR}/hyperlpr3.lib
+        ${THIRDPARTY_DIR}/MNN.lib
+        winmm
+)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy

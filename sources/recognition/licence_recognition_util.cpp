@@ -1,5 +1,4 @@
 #include <licence_recognition_util.hpp>
-#include <QDebug>
 #include <QFile>
 #include <QString>
 
@@ -125,7 +124,7 @@ void LicenceRecognition::extractPlateRegion()
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(color_mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    qDebug().noquote() << "检测到 " << contours.size() << " 个轮廓";
+    
 
     cv::Rect best_plate;
     float idealAspectRatio = 4.4f;
@@ -138,7 +137,7 @@ void LicenceRecognition::extractPlateRegion()
     int fallback_width = 0;
     std::vector<cv::Point> best_contour;
 
-    qDebug().noquote() << "车牌面积范围: " << minPlateArea << " - " << maxPlateArea;
+    
 
     for (const auto& contour : contours)
     {
@@ -169,8 +168,7 @@ void LicenceRecognition::extractPlateRegion()
         float areaScore = static_cast<float>(area) / maxPlateArea;
         float totalScore = aspectScore * 0.7f + areaScore * 0.3f;
 
-        qDebug().noquote() << "候选区域: 面积=" << area << ", 宽高比=" << aspect_ratio
-                  << ", 得分=" << totalScore;
+        
 
         if (totalScore > 0.2f && area > maxArea)
         {
@@ -184,12 +182,12 @@ void LicenceRecognition::extractPlateRegion()
     {
         if (fallback_candidate.area() > 0)
         {
-            qDebug().noquote() << "未找到车牌, 使用最宽水平轮廓作为候选区域";
+            
             best_plate = fallback_candidate;
         }
         else
         {
-            qDebug().noquote() << "未找到车牌, 使用全图作为候选区域";
+            
             best_plate = cv::Rect(0, 0, image.cols, image.rows);
         }
     }
@@ -227,7 +225,7 @@ void LicenceRecognition::extractPlateRegion()
         plate_corners.push_back(bl);
         plate_corners.push_back(br);
         
-        qDebug().noquote() << "使用minAreaRect角点";
+        
     }
     else
     {
@@ -236,7 +234,7 @@ void LicenceRecognition::extractPlateRegion()
         plate_corners.push_back(cv::Point2f(expanded_rect.x, expanded_rect.y + expanded_rect.height));
         plate_corners.push_back(cv::Point2f(expanded_rect.x + expanded_rect.width, expanded_rect.y + expanded_rect.height));
         
-        qDebug().noquote() << "使用扩展区域矩形角点";
+        
     }
 
     for (int i = 0; i < plate_corners.size(); i++)
@@ -248,12 +246,11 @@ void LicenceRecognition::extractPlateRegion()
         cv::line(marked_image, plate_corners[i], plate_corners[(i+1)%4], cv::Scalar(0, 0, 255), 2);
     }
 
-    qDebug().noquote() << "选中的车牌区域: [" << best_rect.width << " x " << best_rect.height 
-                  << " from (" << best_rect.x << ", " << best_rect.y << ")]";
-    qDebug().noquote() << "角点数量: " << plate_corners.size();
+    
+    
     for (size_t i = 0; i < plate_corners.size(); i++)
     {
-        qDebug().noquote() << "角点" << i << ": (" << plate_corners[i].x << ", " << plate_corners[i].y << ")";
+        
     }
 }
 
@@ -263,7 +260,7 @@ void LicenceRecognition::correctPlateRegion()
     cv::Mat gray;
     cv::cvtColor(plate_roi, gray, cv::COLOR_BGR2GRAY);
 
-    qDebug().noquote() << "矫正车牌区域: 尺寸=" << gray.cols << "x" << gray.rows;
+    
 
     if (plate_corners.size() == 4)
     {
@@ -272,16 +269,14 @@ void LicenceRecognition::correctPlateRegion()
         cv::Point2f bl = plate_corners[2];
         cv::Point2f br = plate_corners[3];
 
-        qDebug().noquote() << "四角点: tl=(" << tl.x << "," << tl.y << "), tr=(" << tr.x << "," << tr.y 
-                  << "), bl=(" << bl.x << "," << bl.y << "), br=(" << br.x << "," << br.y << ")";
+        
 
         double width_top = cv::norm(tr - tl);
         double width_bottom = cv::norm(br - bl);
         double height_left = cv::norm(bl - tl);
         double height_right = cv::norm(br - tr);
 
-        qDebug().noquote() << "上宽=" << width_top << ", 下宽=" << width_bottom 
-                  << ", 左高=" << height_left << ", 右高=" << height_right;
+        
 
         const float ideal_plate_ratio = 4.4f;
         int output_width = static_cast<int>(std::max(width_top, width_bottom) * 1.3);
@@ -293,7 +288,7 @@ void LicenceRecognition::correctPlateRegion()
             output_width = static_cast<int>(output_height * ideal_plate_ratio);
         }
 
-        qDebug().noquote() << "调整后输出尺寸=" << output_width << "x" << output_height;
+        
 
         std::vector<cv::Point2f> dst_points = {
             cv::Point2f(0, 0),
@@ -352,7 +347,7 @@ void LicenceRecognition::correctPlateRegion()
         cv::Rect crop_rect(0, 0, right_boundary, corrected.rows);
         corrected = corrected(crop_rect);
 
-        qDebug().noquote() << "透视变换后尺寸=" << corrected.cols << "x" << corrected.rows;
+        
 
         corrected_plate_image = corrected;
         cv::cvtColor(corrected_plate_image, plate_image, cv::COLOR_BGR2GRAY);
@@ -365,7 +360,7 @@ void LicenceRecognition::correctPlateRegion()
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(edges, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    qDebug().noquote() << "边缘检测找到 " << contours.size() << " 个轮廓";
+    
 
     double max_area = 0;
     std::vector<cv::Point> best_contour;
@@ -380,7 +375,7 @@ void LicenceRecognition::correctPlateRegion()
         }
     }
 
-    qDebug().noquote() << "最大轮廓面积=" << max_area << ", 点数=" << best_contour.size();
+    
 
     cv::RotatedRect rotated_rect = cv::minAreaRect(best_contour);
     float angle = rotated_rect.angle;
@@ -399,7 +394,7 @@ void LicenceRecognition::correctPlateRegion()
     if (angle > max_rotation_angle) angle = max_rotation_angle;
     if (angle < -max_rotation_angle) angle = -max_rotation_angle;
 
-    qDebug().noquote() << "旋转角度=" << angle;
+    
 
     if (std::abs(angle) > 0.5f)
     {
@@ -433,7 +428,7 @@ int LicenceRecognition::recognizePlate()
             return -2;
         }
 
-        qDebug().noquote() << "开始字符识别, 共 " << character_images.size() << " 个字符";
+        
 
         if (character_images.size() < 2)
         {
@@ -460,7 +455,7 @@ int LicenceRecognition::recognizePlate()
             plate += str;
         }
 
-        qDebug().noquote() << "识别完成, 结果:" << QString::fromStdString(plate);
+        
         printResult();
     }
     catch (cv::Exception& e)
@@ -838,8 +833,8 @@ void LicenceRecognition::recognizeProvince(std::string& input)
 {
     cv::Mat first_char_image = character_images[0];
 
-    qDebug().noquote() << "识别省份字符...";
-    qDebug().noquote() << "字符图像尺寸: " << first_char_image.cols << "x" << first_char_image.rows;
+    
+    
 
     double max_score = -1;
     std::string matched_province;
@@ -865,7 +860,7 @@ void LicenceRecognition::recognizeProvince(std::string& input)
 
         double combined_score = maxVal1 * 0.35 + diff_score * 0.25 + maxVal3 * 0.2 + shape_score * 0.2;
 
-        qDebug().noquote() << "省份: " << QString::fromStdString(province_img.first) << ", 得分: " << combined_score;
+        
 
         if (combined_score > max_score)
         {
@@ -874,8 +869,8 @@ void LicenceRecognition::recognizeProvince(std::string& input)
         }
     }
 
-    qDebug().noquote() << "最佳省份匹配: " << QString::fromStdString(matched_province) << " (得分: " << max_score << ")";
-    qDebug().noquote() << "省份映射为:" << QString::fromStdString(province_map.at(matched_province));
+    
+    
 
     input = matched_province;
     province_images.clear();
@@ -885,7 +880,7 @@ void LicenceRecognition::recognizeAlphabet(std::string& input)
 {
     cv::Mat second_char_image = character_images[1];
 
-    qDebug().noquote() << "识别字母字符...";
+    
 
     double max_score = -1;
     std::string matched_alphabet;
@@ -917,7 +912,7 @@ void LicenceRecognition::recognizeAlphabet(std::string& input)
         }
     }
 
-    qDebug().noquote() << "最佳字母匹配: " << QString::fromStdString(matched_alphabet) << " (得分: " << max_score << ")";
+    
 
     input = matched_alphabet;
     alphabet_images.clear();
@@ -955,7 +950,7 @@ void LicenceRecognition::recognizeCharacters(cv::Mat& input, std::string& output
             matched_char = template_img.first;
         }
     }
-    qDebug().noquote() << "字符匹配结果: " << QString::fromStdString(matched_char) << " (得分: " << max_score << ")";
+    
     output = matched_char;
 }
 
@@ -1000,7 +995,7 @@ void LicenceRecognition::recognizeCharactersByFeature(cv::Mat& input, std::strin
 
 void LicenceRecognition::printResult()
 {
-    qDebug().noquote() << "结果" << QString::fromStdString(plate);
+    
 }
 
 const cv::Mat& LicenceRecognition::getCorrectedPlateImage() const

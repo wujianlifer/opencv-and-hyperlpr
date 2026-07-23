@@ -2,7 +2,6 @@
 // ImageProvider 实现
 //
 #include "image_provider.hpp"
-#include <QDebug>
 
 ImageProvider::ImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image) {}

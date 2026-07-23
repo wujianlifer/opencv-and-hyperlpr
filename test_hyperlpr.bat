@@ -1,34 +1,14 @@
 @echo off
-cd /d "E:\QtProject\opencvAndHyperlpr\build\msvc2022_6_10_3-Debug"
-
-echo Testing HyperLPR with sample image...
-echo.
-
-set "MODEL_PATH=E:\QtProject\opencvAndHyperlpr\build\msvc2022_6_10_3-Debug\resource\models\r2_mobile"
-set "IMAGE_PATH=E:\QtProject\opencvAndHyperlpr\pictures\car_plate_sample.jpg"
-
-echo Model path: %MODEL_PATH%
-echo Image path: %IMAGE_PATH%
-echo.
-
-if exist "%IMAGE_PATH%" (
-    echo Image exists.
+setlocal
+set "ROOT=%~dp0"
+if exist "%ROOT%build\msvc2022_6_10_3\Release\opencvAndHyperlpr.exe" (
+    cd /d "%ROOT%build\msvc2022_6_10_3\Release"
+) else if exist "%ROOT%build\msvc2022_6_10_3\Debug\opencvAndHyperlpr.exe" (
+    cd /d "%ROOT%build\msvc2022_6_10_3\Debug"
 ) else (
-    echo ERROR: Image not found!
+    echo 未找到构建产物，请先在 Qt Creator 中构建项目（Release 或 Debug）。
     pause
     exit /b 1
 )
-
-if exist "%MODEL_PATH%" (
-    echo Model directory exists.
-) else (
-    echo ERROR: Model directory not found!
-    pause
-    exit /b 1
-)
-
-echo.
-echo Running test...
-echo.
-
+opencvAndHyperlpr.exe
 pause

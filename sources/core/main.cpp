@@ -14,17 +14,8 @@
 void createDirectoryIfNotExists()
 {
     QDir directory(QString::fromStdString(cache_file_path));
-    if (!directory.exists())
-    {
-        if (directory.mkpath(QString::fromStdString(cache_file_path)))
-            qDebug() << "Directory created:" << QString::fromStdString(cache_file_path);
-        else
-            qWarning() << "Failed to create directory:" << QString::fromStdString(cache_file_path);
-    }
-    else
-    {
-        qDebug() << "Directory already exists:" << QString::fromStdString(cache_file_path);
-    }
+    if (!directory.exists() && !directory.mkpath(QString::fromStdString(cache_file_path)))
+        qWarning() << "Failed to create directory:" << QString::fromStdString(cache_file_path);
 }
 
 void clearCacheDirectory()
@@ -33,9 +24,7 @@ void clearCacheDirectory()
     QStringList files = directory.entryList(QDir::Files);
     foreach (QString filename, files)
     {
-        if (directory.remove(filename))
-            qDebug() << "Removed file:" << filename;
-        else
+        if (!directory.remove(filename))
             qWarning() << "Failed to remove file:" << filename;
     }
 }
