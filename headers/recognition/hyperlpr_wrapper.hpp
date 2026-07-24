@@ -16,7 +16,6 @@ struct PlateResult {
 class HyperLPRWrapper {
 private:
     P_HLPR_Context ctx = nullptr;
-    HLPR_PlateResultList results{};
     std::string models_path;
     
 public:
