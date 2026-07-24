@@ -76,6 +76,23 @@ GroupBox {
             wrapMode: Text.WrapAnywhere
         }
 
+        CheckBox {
+            text: "实时预览（改参数即自动重算）"
+            checked: processor.livePreview
+            onCheckedChanged: processor.livePreview = checked
+            enabled: processor.hasParameters
+            Layout.alignment: Qt.AlignHCenter
+        }
+
+        Label {
+            visible: !processor.hasParameters
+            Layout.alignment: Qt.AlignHCenter
+            text: "当前操作无可调参数，已禁用实时预览"
+            font.pixelSize: 11
+            color: "#9E9E9E"
+            wrapMode: Text.WrapAnywhere
+        }
+
         Button {
             text: processor.processing ? "处理中…" : "生成"
             enabled: processor.hasImage && !processor.processing

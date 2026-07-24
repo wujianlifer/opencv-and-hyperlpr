@@ -32,6 +32,12 @@ ImageProcessor::ImageProcessor(QObject* parent) : QObject(parent) {
     connect(m_worker, &ProcessorWorker::finished,
             this, &ImageProcessor::onProcessFinished);
     m_workerThread.start();
+
+    // 实时预览：参数变化后防抖 200ms 再触发一次处理
+    m_previewTimer = new QTimer(this);
+    m_previewTimer->setSingleShot(true);
+    m_previewTimer->setInterval(200);
+    connect(m_previewTimer, &QTimer::timeout, this, &ImageProcessor::runLivePreview);
 }
 
 ImageProcessor::~ImageProcessor() {
@@ -109,19 +115,93 @@ void ImageProcessor::setParam1Value(int v) {
     if (m_param1Value != v) {
         m_param1Value = v;
         emit param1ValueChanged();
+        scheduleLivePreview();
     }
 }
 void ImageProcessor::setParam2Value(double v) {
     if (m_param2Value != v) {
         m_param2Value = v;
         emit param2ValueChanged();
+        scheduleLivePreview();
     }
 }
 void ImageProcessor::setOptionIndex(int i) {
     if (m_optionIndex != i) {
         m_optionIndex = i;
         emit optionIndexChanged();
+        scheduleLivePreview();
     }
+}
+
+void ImageProcessor::setLivePreview(bool v) {
+    if (m_livePreview != v) {
+        m_livePreview = v;
+        if (!v) {                 // 关闭时取消待处理的预览
+            m_previewTimer->stop();
+            m_pendingLivePreview = false;
+        }
+        emit livePreviewChanged();
+    }
+}
+
+// ----------------------- 参数实时预览 -----------------------
+void ImageProcessor::scheduleLivePreview() {
+    if (m_livePreview && m_type != EMPTY && !m_sourceFileName.isEmpty())
+        m_previewTimer->start();
+}
+
+void ImageProcessor::runLivePreview() {
+    if (m_sourceFileName.isEmpty() || m_type == EMPTY)
+        return;
+    // 轻量校验：非法参数只提示，不弹窗（与 apply 不同）
+    QString msg;
+    if (!validateParams(msg)) {
+        setStatusMessage(msg);
+        return;
+    }
+    // 正在处理则记录待补跑，避免丢失最新参数
+    if (m_processing) {
+        m_pendingLivePreview = true;
+        return;
+    }
+    ImageProcessor::ProcessRequest req;
+    req.type = m_type;
+    req.param1 = m_param1Value;
+    req.param2 = m_param2Value;
+    req.optionIndex = m_optionIndex;
+    req.sourceImage = m_sourceImage;
+    req.requestId = ++m_jobId;
+    setProcessing(true);
+    setStatusMessage("预览中…");
+    emit processRequested(req);
+}
+
+// 校验当前参数是否可用于处理；非法时返回 false 并通过 outMsg 给出原因（不弹窗）
+bool ImageProcessor::validateParams(QString& outMsg) {
+    outMsg.clear();
+    if (m_type == SEGMENTATION_THRESHOLD) {
+        if (m_param1Value == 0 || m_param1Value == 255)
+            outMsg = "错误: 无法进行阈值处理，阈值不能为0或者255";
+    } else if (m_type == FREQUENCY_LOW_PASS_FILTER) {
+        if (m_param1Value % 2 == 0) outMsg = "错误: 无法进行低通滤波，滤波半径大小必须为奇数";
+        else if (m_param1Value >= 15) outMsg = "错误: 无法进行低通滤波，您输入的滤波半径过大";
+        else if (m_param1Value == 0) outMsg = "您还未输入任何滤波半径，请输入滤波半径";
+    } else if (m_type == DIMENSION_MEDIAN_FILTER || m_type == DIMENSION_GAUSSIAN_FILTER ||
+               m_type == DIMENSION_LAPLACIAN_FILTER || m_type == DIMENSION_SOBEL_FILTER) {
+        if (m_param1Value % 2 == 0) outMsg = "错误: 无法进行滤波，滤波半径大小必须为奇数";
+        else if (m_param1Value >= 15) outMsg = "错误: 无法进行滤波，您输入的滤波半径过大";
+        else if (m_param1Value == 0) outMsg = "您还未输入任何滤波半径，请输入滤波半径";
+    } else if (m_type == MORPHOLOGY_DILATION || m_type == MORPHOLOGY_EROSION ||
+               m_type == MORPHOLOGY_OPENING || m_type == MORPHOLOGY_CLOSING) {
+        if (m_param1Value == 0) outMsg = "您还没有输入核大小";
+    } else if (m_type == BASED_RESIZE) {
+        if (m_param1Value <= 0 || m_param1Value > 100)
+            outMsg = "错误: 无法进行缩放，请输入 1~100 的缩放比例(%)";
+    } else if (m_type == SEGMENTATION_EDGE || m_type == SEGMENTATION_LINE_DETECTION) {
+        if (m_param1Value >= m_param2Value)
+            outMsg = "错误: 低阈值必须小于高阈值，请重新输入";
+    }
+    return outMsg.isEmpty();
 }
 
 // ----------------------- 供 QML 调用的槽 -----------------------
@@ -183,38 +263,10 @@ void ImageProcessor::apply() {
     }
 
     // ---- 参数校验（与原 Widgets 版本保持一致，校验在主线程即时反馈）----
-    if (m_type == SEGMENTATION_THRESHOLD) {
-        if (m_param1Value == 0 || m_param1Value == 255) {
-            showWarning("错误: 无法进行阈值处理，阈值不能为0或者255");
-            return;
-        }
-    }
-    if (m_type == FREQUENCY_LOW_PASS_FILTER) {
-        if (m_param1Value % 2 == 0) { showWarning("错误: 无法进行低通滤波，滤波半径大小必须为奇数"); return; }
-        if (m_param1Value >= 15)    { showWarning("错误: 无法进行低通滤波，您输入的滤波半径过大"); return; }
-        if (m_param1Value == 0)     { showWarning("您还未输入任何滤波半径，请输入滤波半径"); return; }
-    }
-    if (m_type == DIMENSION_MEDIAN_FILTER || m_type == DIMENSION_GAUSSIAN_FILTER ||
-        m_type == DIMENSION_LAPLACIAN_FILTER || m_type == DIMENSION_SOBEL_FILTER) {
-        if (m_param1Value % 2 == 0) { showWarning("错误: 无法进行滤波，滤波半径大小必须为奇数"); return; }
-        if (m_param1Value >= 15)    { showWarning("错误: 无法进行滤波，您输入的滤波半径过大"); return; }
-        if (m_param1Value == 0)     { showWarning("您还未输入任何滤波半径，请输入滤波半径"); return; }
-    }
-    if (m_type == MORPHOLOGY_DILATION || m_type == MORPHOLOGY_EROSION ||
-        m_type == MORPHOLOGY_OPENING || m_type == MORPHOLOGY_CLOSING) {
-        if (m_param1Value == 0) { showWarning("您还没有输入核大小"); return; }
-    }
-    if (m_type == BASED_RESIZE) {
-        if (m_param1Value <= 0 || m_param1Value > 100) {
-            showWarning("错误: 无法进行缩放，请输入 1~100 的缩放比例(%)");
-            return;
-        }
-    }
-    if (m_type == SEGMENTATION_EDGE || m_type == SEGMENTATION_LINE_DETECTION) {
-        if (m_param1Value >= m_param2Value) {
-            showWarning("错误: 低阈值必须小于高阈值，请重新输入");
-            return;
-        }
+    QString msg;
+    if (!validateParams(msg)) {
+        showWarning(msg);
+        return;
     }
 
     // 防止并发提交：已有任务在后台处理时直接返回
@@ -255,6 +307,11 @@ void ImageProcessor::onProcessFinished(int requestId, const QImage& result,
             showWarning(status);
         else
             setStatusMessage(QString());
+    }
+    // 实时预览：处理期间若参数又变，用最新参数补跑一次，保证最终参数一定生效
+    if (success && m_pendingLivePreview) {
+        m_pendingLivePreview = false;
+        runLivePreview();
     }
 }
 
@@ -416,6 +473,11 @@ void ImageProcessor::configureParameters() {
     // 切换到非车牌识别操作时清空车牌文本
     if (m_type != PLATE)
         setPlateText(QString());
+    // 计算“是否有可调整参数”：与 QML 参数面板可见性判定保持一致
+    m_hasParameters = !m_param1Label.isEmpty() || m_needsParam2 || m_needsOption;
+    // 无参数可调整时实时预览无意义：自动关闭并禁用勾选框
+    if (!m_hasParameters)
+        setLivePreview(false);
     emit operationConfigChanged();
     emit param1ValueChanged();
     emit param2ValueChanged();

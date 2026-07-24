@@ -13,6 +13,7 @@
 #include <QPixmap>
 #include <QSize>
 #include <QThread>
+#include <QTimer>
 #include <QUrl>
 
 #include "globe_define_words.h"
@@ -115,6 +116,10 @@ public:
     Q_PROPERTY(bool processing READ processing NOTIFY processingChanged)
     // 上次使用的目录（用于打开/保存对话框记忆位置）
     Q_PROPERTY(QUrl currentFolder READ currentFolder NOTIFY currentFolderChanged)
+    // 是否开启参数实时预览（勾选后改参数即自动重算，无需点“生成”）
+    Q_PROPERTY(bool livePreview READ livePreview WRITE setLivePreview NOTIFY livePreviewChanged)
+    // 当前操作是否有可调整参数（无参数时实时预览无意义，勾选框应禁用）
+    Q_PROPERTY(bool hasParameters READ hasParameters NOTIFY operationConfigChanged)
 
     // ---- 参数面板配置 ----
     Q_PROPERTY(QString operationTitle READ operationTitle NOTIFY operationConfigChanged)
@@ -165,10 +170,13 @@ public:
     int optionIndex() const { return m_optionIndex; }
     bool showPlateText() const { return m_type == PLATE; }
     bool processing() const { return m_processing; }
+    bool livePreview() const { return m_livePreview; }
+    bool hasParameters() const { return m_hasParameters; }
 
     void setParam1Value(int v);
     void setParam2Value(double v);
     void setOptionIndex(int i);
+    void setLivePreview(bool v);
 
     // 设置图像 provider（在主线程同步推送图像副本，避免 QML 渲染线程跨线程访问）
     void setImageProvider(ImageProvider* provider) { m_provider = provider; }
@@ -186,6 +194,7 @@ signals:
     void optionIndexChanged();
     void processingChanged();
     void currentFolderChanged();
+    void livePreviewChanged();
     // 规范化消息信号（level: Info/Warning/Error），供 QML 决定弹窗
     void message(const QString& text, MessageLevel level);
     // 提交处理请求给后台工作线程（跨线程，自动排队）
@@ -217,6 +226,10 @@ private:
     // 根据当前操作类型更新参数面板配置
     void configureParameters();
     void setProcessing(bool v);
+    // 参数实时预览：防抖调度与执行、参数校验复用
+    void scheduleLivePreview();
+    void runLivePreview();
+    bool validateParams(QString& outMsg);
 
     QImage m_sourceImage;
     QImage m_resultImage;
@@ -253,6 +266,10 @@ private:
     QThread m_workerThread;
     bool m_processing = false;   // 是否有任务在后台处理
     int m_jobId = 0;             // 任务序号，用于丢弃过期结果
+    QTimer* m_previewTimer = nullptr;  // 实时预览防抖计时器（单次触发）
+    bool m_livePreview = false;        // 是否开启参数实时预览
+    bool m_pendingLivePreview = false; // 处理中收到新参数，结束后再补跑一次
+    bool m_hasParameters = false;      // 当前操作是否有可调整参数
 };
 
 Q_DECLARE_METATYPE(ImageProcessor::ProcessRequest)
