@@ -78,8 +78,8 @@ cv::Mat DimensionManipulator::get_Gauss_mask(cv::Size size, double sigma) {
     // 计算高斯模板值
     for (int i = 0; i < size.height; ++i) {
         for (int j = 0; j < size.width; ++j) {
-            double x = pow(j - center_x, 2);
-            double y = pow(i - center_y, 2);
+            double x = (j - center_x) * (j - center_x);
+            double y = (i - center_y) * (i - center_y);
             double g = exp(-(x + y) / (2 * sigma * sigma));
             mask.at<double>(i, j) = g;
             sum += g;
