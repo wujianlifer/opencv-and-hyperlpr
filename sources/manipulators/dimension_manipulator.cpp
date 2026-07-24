@@ -34,36 +34,14 @@ DimensionManipulator::DimensionManipulator(const cv::Mat &mat) : Manipulator(mat
     }
 }
 
-//可能导致越界内存访问
 cv::Mat DimensionManipulator::histogram_equalization() {
     try {
         if (this->gray_image.empty()) {
             throw std::runtime_error("Image data is empty.");
         }
         cv::Mat equalized_image;
-        cv::Mat hist;
-        int hist_size = 256;
-        float range[] = {0, 256};
-        const float* hist_range = {range};
-        cv::calcHist(&this->gray_image, 1, 0, cv::Mat(), hist, 1, &hist_size, &hist_range, true, false);
-        cv::Mat cdf;
-        hist.copyTo(cdf);
-        for (int i = 1; i < hist_size; ++i) {
-            cdf.at<float>(i) += cdf.at<float>(i - 1);
-        }
-        cdf /= this->gray_image.total();
-        // 创建均衡化后的图像
-        equalized_image = cv::Mat(this->gray_image.size(), this->gray_image.type());
-        for (int i = 0; i < this->gray_image.rows; ++i) {
-            for (int j = 0; j < this->gray_image.cols; ++j) {
-                // 检查索引范围
-                if (i >= 0 && i < this->gray_image.rows && j >= 0 && j < this->gray_image.cols) {
-                    equalized_image.at<uchar>(i, j) = cv::saturate_cast<uchar>(cdf.at<float>(this->gray_image.at<uchar>(i, j)) * 255);
-                } else {
-                    std::cerr << "Out of bounds access at index (" << i << ", " << j << ")." << std::endl;
-                }
-            }
-        }
+        // 直接用 OpenCV 内置均衡化：要求单通道 8 位输入，gray_image 已满足
+        cv::equalizeHist(this->gray_image, equalized_image);
         return equalized_image;
     } catch (const cv::Exception& e) {
         std::cerr << "OpenCV error occurred in manipulator: " << e.what() << std::endl;
@@ -117,11 +95,6 @@ cv::Mat DimensionManipulator::median_filter(int radius) {
         if (this->gray_image.empty()) {
             throw std::runtime_error("Image data is empty.");
         }
-        // 计算中值模板尺寸
-        cv::Size mask_size(radius * 2 + 1, radius * 2 + 1);
-        // 创建中值模板矩阵
-        cv::Mat mask(mask_size, CV_8U);
-        // 计算中值滤波结果
         cv::Mat result;
         cv::medianBlur(this->gray_image, result, radius);
         return result;
