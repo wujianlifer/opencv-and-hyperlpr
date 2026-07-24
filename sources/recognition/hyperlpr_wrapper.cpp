@@ -36,19 +36,6 @@ bool HyperLPRWrapper::init(const std::string& model_path) {
         ctx = nullptr;
         return false;
     }
-    
-    
-    
-    buffer = HLPR_CreateDataBufferEmpty();
-    if (!buffer) {
-        
-        HLPR_ReleaseContext(ctx);
-        ctx = nullptr;
-        return false;
-    }
-    
-    
-    
     return true;
 }
 
@@ -124,10 +111,6 @@ bool HyperLPRWrapper::recognize(const cv::Mat& image, std::vector<PlateResult>& 
 }
 
 void HyperLPRWrapper::release() {
-    if (buffer) {
-        HLPR_ReleaseDataBuffer(buffer);
-        buffer = nullptr;
-    }
     if (ctx) {
         HLPR_ReleaseContext(ctx);
         ctx = nullptr;
@@ -135,5 +118,5 @@ void HyperLPRWrapper::release() {
 }
 
 bool HyperLPRWrapper::isInitialized() const {
-    return ctx != nullptr && buffer != nullptr;
+    return ctx != nullptr;
 }
